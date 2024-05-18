@@ -16,7 +16,8 @@ import { useSelector } from "react-redux";
 import { RootState, dispatch } from "@/store";
 import { CircularProgress, Grid } from "@mui/material";
 import { clearSession } from "@/store/reducer/session";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 const UsersList: NextPage = () => {
   const [userList, setUserList] = useState<UserType[]>([]);
@@ -29,12 +30,9 @@ const UsersList: NextPage = () => {
     []
   );
   const activeIndex = userList.length - 1;
-
   const status = useSelector((state: RootState) => state.userSession);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { data: session } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     if (
@@ -43,15 +41,26 @@ const UsersList: NextPage = () => {
       status === null
     ) {
       dispatch(clearSession());
-      redirect("/");
+      router.push("/");
+    } else if (session?.user?.email) {
+      fetchData(session.user.email);
     }
-  }, [status]);
+  }, [status, session, router]);
 
-  const fetchData = async () => {
+  const fetchData = async (email: string) => {
     try {
-      const response = await fetch("/api/listUser?email=jack.wong@example.com");
+      const response = await fetch(
+        `/api/listUser?email=${encodeURIComponent(email)}`
+      );
       const data = await response.json();
-      setUserList(data);
+
+      if (data.hasUser) {
+        setUserList(data.recommendations);
+      } else {
+        console.log("user");
+
+        router.push("/form");
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -113,7 +122,7 @@ const UsersList: NextPage = () => {
         ))}
       </AnimatePresence>
       {userList.length === 0 ? (
-        <span className="text-black text-xl">End of Stack</span>
+        <span className="text-black text-xl">Daily Quota Reached </span>
       ) : null}
       <footer className="absolute bottom-4 flex items-center space-x-4">
         <div className="flex flex-col items-center space-y-2">

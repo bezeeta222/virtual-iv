@@ -50,7 +50,7 @@ export async function GET(request: Request) {
 
   if (!email) {
     return NextResponse.json(
-      { message: "Please provide an email parameter" },
+      { message: "Please provide an email parameter", hasUser: false },
       { status: 400 }
     );
   }
@@ -62,7 +62,7 @@ export async function GET(request: Request) {
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { message: "No user found with the provided email" },
+        { message: "No user found with the provided email", hasUser: false },
         { status: 404 }
       );
     }
@@ -70,11 +70,14 @@ export async function GET(request: Request) {
     const user = result.rows[0] as any;
     const recommendations = await getRecommendations(user);
 
-    return NextResponse.json(recommendations, { status: 200 });
+    return NextResponse.json(
+      { message: "User found", hasUser: true, recommendations },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error executing SQL query:", error);
     return NextResponse.json(
-      { message: "An error occurred while fetching user data" },
+      { message: "An error occurred while fetching user data", hasUser: false },
       { status: 500 }
     );
   }
