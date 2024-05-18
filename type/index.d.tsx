@@ -17,3 +17,18 @@ export interface CardProps {
   active: boolean;
   removeCard: (oldCard: CardType, swipe: SwipeType) => void;
 }
+
+export interface UserType {
+  email: string;
+  gender: string;
+  id: number;
+  interests: string;
+  location: string;
+  name: string;
+  profile_picture_url: string;
+  score: number;
+  university: string;
+}
+
+
+

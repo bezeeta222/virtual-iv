@@ -1,26 +1,41 @@
 import { PanInfo, motion } from "framer-motion";
 import { useState } from "react";
-import { CardProps } from "../../type/index.d";
+import { UserType, SwipeType } from "../../type/index.d";
+import { CircularProgress } from "@mui/material";
 
-const Card: React.FC<CardProps> = ({ card, removeCard, active }) => {
+interface CardProps {
+  user: UserType;
+  removeCard: (user: UserType, swipe: SwipeType) => void;
+  active: boolean;
+}
+
+const Card: React.FC<CardProps> = ({ user, removeCard, active }) => {
   const [leaveX, setLeaveX] = useState(0);
   const [leaveY, setLeaveY] = useState(0);
+  const [loading, setLoading] = useState(true);
+
   const onDragEnd = (_e: any, info: PanInfo) => {
     if (info.offset.y < -100) {
       setLeaveY(-2000);
-      removeCard(card, "superlike");
+      removeCard(user, "superlike");
       return;
     }
     if (info.offset.x > 100) {
       setLeaveX(1000);
-      removeCard(card, "like");
+      removeCard(user, "like");
     }
     if (info.offset.x < -100) {
       setLeaveX(-1000);
-      removeCard(card, "nope");
+      removeCard(user, "nope");
     }
   };
-  const classNames = `absolute h-[430px] w-[300px] bg-white shadow-xl rounded-2xl flex flex-col justify-center items-center cursor-grab`;
+
+  const handleImageLoad = () => {
+    setLoading(false);
+  };
+
+  const classNames = `absolute h-[500px] w-[350px] bg-white shadow-xl rounded-2xl flex flex-col cursor-grab overflow-hidden`;
+
   return (
     <>
       {active ? (
@@ -33,7 +48,7 @@ const Card: React.FC<CardProps> = ({ card, removeCard, active }) => {
           }}
           animate={{
             scale: 1.05,
-            rotate: `${card.name.length % 2 === 0 ? 6 : -6}deg`,
+            rotate: `${user.name.length % 2 === 0 ? 6 : -6}deg`,
           }}
           exit={{
             x: leaveX,
@@ -45,38 +60,52 @@ const Card: React.FC<CardProps> = ({ card, removeCard, active }) => {
           className={classNames}
           data-testid="active-card"
         >
-          <Emoji label={card.name} emoji={card.emoji} />
-          <Title title={card.name} color={card.color} />
+          <div className="relative w-full h-2/3 flex justify-center items-center">
+            {loading && <CircularProgress />}
+            <img
+              src={user.profile_picture_url}
+              alt={user.name}
+              className="absolute w-full h-full object-cover"
+              onLoad={handleImageLoad}
+              draggable={false}
+            />
+          </div>
+          <div className="p-4 overflow-y-auto">
+            <Title title={user.name} color={"#000"} />
+            <p className="text-sm text-gray-600">{user.email}</p>
+            <p className="text-sm text-gray-600">{user.gender}</p>
+            <p className="text-sm text-gray-600">{user.location}</p>
+            <p className="text-sm text-gray-600">{user.university}</p>
+            <p className="text-sm text-gray-600">{user.interests}</p>
+          </div>
         </motion.div>
       ) : (
         <div
           className={`${classNames} ${
-            card.name.length % 2 === 0 ? "rotate-6" : "-rotate-6"
+            user.name.length % 2 === 0 ? "rotate-6" : "-rotate-6"
           }`}
         >
-          <Emoji label={card.name} emoji={card.emoji} />
-          <Title title={card.name} color={card.color} />
-          <h1>
-            halo
-          </h1>
+          <div className="relative w-full h-2/3 flex justify-center items-center">
+            {loading && <CircularProgress />}
+            <img
+              src={user.profile_picture_url}
+              alt={user.name}
+              className="absolute w-full h-full object-cover"
+              onLoad={handleImageLoad}
+              draggable={false}
+            />
+          </div>
+          <div className="p-4 overflow-y-auto">
+            <Title title={user.name} color={"#000"} />
+            <p className="text-sm text-gray-600">{user.email}</p>
+            <p className="text-sm text-gray-600">{user.gender}</p>
+            <p className="text-sm text-gray-600">{user.location}</p>
+            <p className="text-sm text-gray-600">{user.university}</p>
+            <p className="text-sm text-gray-600">{user.interests}</p>
+          </div>
         </div>
       )}
     </>
-  );
-};
-
-/**
- * a11y friendly component for emojis
- * @reference https://devyarns.com/accessible-emojis
- */
-const Emoji: React.FC<{ emoji: string; label: string }> = ({
-  emoji,
-  label,
-}) => {
-  return (
-    <span role="img" aria-label={label} className="text-[140px]">
-      {emoji}
-    </span>
   );
 };
 
@@ -85,7 +114,7 @@ const Title: React.FC<{ title: string; color: string }> = ({
   color,
 }) => {
   return (
-    <span style={{ color }} className="text-5xl font-bold">
+    <span style={{ color }} className="text-2xl font-bold">
       {title}
     </span>
   );

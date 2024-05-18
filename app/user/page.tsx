@@ -1,97 +1,118 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { NextPage } from "next";
 import RotateIcon from "../../components/icon/RotateIcon";
 import Counter from "../../components/Cards/Counter";
 import {
-  CardType,
   HistoryType,
   ResultType,
   SwipeType,
+  UserType,
 } from "../../type/index.d";
-import CARDS from "../../data/card";
 import Card from "../../components/Cards/Card";
-import Head from "next/head";
 import { useSelector } from "react-redux";
 import { RootState, dispatch } from "@/store";
 import { CircularProgress, Grid } from "@mui/material";
 import { clearSession } from "@/store/reducer/session";
 import { redirect } from "next/navigation";
 
-const UsersList: React.FC = () => {
-  const [cards, setCards] = useState(CARDS);
-  const status = useSelector((state: RootState) => state.userSession); 
-
+const UsersList: NextPage = () => {
+  const [userList, setUserList] = useState<UserType[]>([]);
   const [result, setResult] = useState<ResultType>({
     like: 0,
     nope: 0,
     superlike: 0,
   });
-  const [history, setHistory] = useState<HistoryType[]>([]);
-  const activeIndex = cards.length - 1;
+  const [history, setHistory] = useState<(UserType & { swipe: SwipeType })[]>(
+    []
+  );
+  const activeIndex = userList.length - 1;
 
+  const status = useSelector((state: RootState) => state.userSession);
 
-  if (status === "loading") {
-    <Grid
-      container
-      justifyContent="center"
-      alignItems="center"
-      style={{ minHeight: "100vh" }}
-    >
-      <Grid item>
-        <CircularProgress />
-      </Grid>
-    </Grid>;
-  }
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  // if (status === "unauthenticated" || status === undefined || status === null) {
-  //   dispatch(clearSession());
-  //   redirect("/");
-  //   return <p>Access Denied</p>;
-  // }
-  // index of last card
+  useEffect(() => {
+    if (
+      status === "unauthenticated" ||
+      status === undefined ||
+      status === null
+    ) {
+      dispatch(clearSession());
+      redirect("/");
+    }
+  }, [status]);
 
-  const removeCard = (oldCard: CardType, swipe: SwipeType) => {
-    setHistory((current) => [...current, { ...oldCard, swipe }]);
-    setCards((current) =>
-      current.filter((card) => {
-        return card.id !== oldCard.id;
+  const fetchData = async () => {
+    try {
+      const response = await fetch("/api/listUser?email=jack.wong@example.com");
+      const data = await response.json();
+      setUserList(data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const removeUser = (oldUser: UserType, swipe: SwipeType) => {
+    setHistory((current) => [...current, { ...oldUser, swipe }]);
+    setUserList((current) =>
+      current.filter((user) => {
+        return user.id !== oldUser.id;
       })
     );
     setResult((current) => ({ ...current, [swipe]: current[swipe] + 1 }));
   };
+
   const undoSwipe = () => {
-    const newCard = history.pop();
-    if (newCard) {
-      const { swipe } = newCard;
+    const newUser = history.pop();
+    if (newUser) {
+      const { swipe, ...rest } = newUser;
       setHistory((current) =>
-        current.filter((card) => {
-          return card.id !== newCard.id;
+        current.filter((user) => {
+          return user.id !== newUser.id;
         })
       );
       setResult((current) => ({ ...current, [swipe]: current[swipe] - 1 }));
-      setCards((current) => [...current, newCard]);
+      setUserList((current) => [...current, rest]);
     }
   };
 
+  if (status === "loading") {
+    return (
+      <Grid
+        container
+        justifyContent="center"
+        alignItems="center"
+        style={{ minHeight: "100vh" }}
+      >
+        <Grid item>
+          <CircularProgress />
+        </Grid>
+      </Grid>
+    );
+  }
+
+  if (status === "unauthenticated" || status === undefined || status === null) {
+    return <p>Access Denied</p>;
+  }
+
   return (
     <div className="relative flex flex-col justify-center items-center w-full h-screen gradient">
-      <Head>
-        <title>Tinder cards with Framer motion</title>
-      </Head>
       <AnimatePresence>
-        {cards.map((card, index) => (
+        {userList.map((user, index) => (
           <Card
-            key={card.name}
+            key={user.id}
             active={index === activeIndex}
-            removeCard={removeCard}
-            card={card}
+            removeCard={removeUser}
+            user={user}
           />
         ))}
       </AnimatePresence>
-      {cards.length === 0 ? (
+      {userList.length === 0 ? (
         <span className="text-black text-xl">End of Stack</span>
       ) : null}
       <footer className="absolute bottom-4 flex items-center space-x-4">
