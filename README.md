@@ -71,12 +71,16 @@ List the technologies, frameworks, and libraries used in your project. For examp
 - Redux
 - TypeScript
 
+```mermaid
 graph TD
     A[User] --> B[Sign In]
     B --> C[Send Login Request to API]
     C --> D{Login Successful?}
     D -->|Yes| E[Navigate to Main Page]
     D -->|No| F[Navigate to Sign Up Page]
+    F --> Q{Sign Up Successful?}
+    Q -->|Yes| G
+    Q -->|No| B
     E --> G[Extract Email from Session]
     G --> H[Send Email to API to Get Recommendations]
     H --> I{Check Logic}
