@@ -22,7 +22,7 @@
     "@vercel/postgres": "^0.8.0",
     "bcrypt": "^5.1.1",
     "faker": "^6.6.6",
-    "framer-motion": "^10.16.4",
+    "≈": "^10.16.4",
     "mongodb": "^6.1.0",
     "mongoose": "^7.6.2",
     "next": "^13.5.4",
